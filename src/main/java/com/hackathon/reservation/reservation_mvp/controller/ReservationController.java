@@ -4,7 +4,6 @@ import com.hackathon.reservation.reservation_mvp.dto.StoreDetailResponseDto;
 import com.hackathon.reservation.reservation_mvp.dto.StoreListResponseDto;
 import com.hackathon.reservation.reservation_mvp.dto.StoreReservationRequestDto;
 import com.hackathon.reservation.reservation_mvp.dto.StoreReservationResponseDto;
-import com.hackathon.reservation.reservation_mvp.entity.Reservation;
 import com.hackathon.reservation.reservation_mvp.entity.Store;
 import com.hackathon.reservation.reservation_mvp.service.ReservationService;
 import lombok.RequiredArgsConstructor;
@@ -21,29 +20,32 @@ public class ReservationController {
 
     private final ReservationService reservationService;
 
+    /**
+     * 예약 목록 조회 API
+     * GET /v1/users/{userId}/reservations
+     */
     @GetMapping("/reservations")
     public List<StoreListResponseDto> getStoresWithReservations(@PathVariable Long userId) {
         List<Store> stores = reservationService.getStoresWithUserReservations(userId);
         List<StoreListResponseDto> response = new ArrayList<>();
 
         for (Store store : stores) {
-            List<Reservation> reservations = store.getReservations();
-
-            // userId로 필터링
-            reservations.stream()
+            store.getReservations().stream()
                     .filter(reservation -> reservation.getMember().getMemberId().equals(userId))
-                    .findFirst() // 한 개만 응답으로 포함
+                    .findFirst()
                     .ifPresent(reservation -> {
                         LocalTime openTime = store.getSchedules().isEmpty() ? LocalTime.of(9, 0) : store.getSchedules().get(0).getOpenTime();
                         LocalTime closeTime = store.getSchedules().isEmpty() ? LocalTime.of(21, 0) : store.getSchedules().get(0).getCloseTime();
-
                         response.add(new StoreListResponseDto(store, reservation, openTime, closeTime));
                     });
         }
-
         return response;
     }
 
+    /**
+     * 예약 요청 API
+     * POST /v1/users/{userId}/reservations
+     */
     @PostMapping("/reservations")
     public StoreReservationResponseDto reserveToAvailableStores(
             @PathVariable Long userId,
@@ -54,6 +56,10 @@ public class ReservationController {
                 reservedCount + "개 매장에 예약이 완료되었습니다." : "예약 가능한 매장이 없습니다.");
     }
 
+    /**
+     * 매장 상세 조회 API
+     * GET /v1/users/{userId}/stores/{storeId}
+     */
     @GetMapping("/stores/{storeId}")
     public StoreDetailResponseDto getStoreSimple(
             @PathVariable Long userId,
@@ -61,5 +67,4 @@ public class ReservationController {
     ) {
         return reservationService.getStoreBasicInfo(userId, storeId);
     }
-
 }

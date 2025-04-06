@@ -1,7 +1,5 @@
 package com.hackathon.reservation.reservation_mvp.service;
 
-import com.hackathon.reservation.reservation_mvp.dto.ReservationEvent;
-import com.hackathon.reservation.reservation_mvp.dto.StoreDetailResponseDto;
 import com.hackathon.reservation.reservation_mvp.dto.StoreReservationRequestDto;
 import com.hackathon.reservation.reservation_mvp.entity.Member;
 import com.hackathon.reservation.reservation_mvp.entity.Reservation;
@@ -11,9 +9,9 @@ import com.hackathon.reservation.reservation_mvp.entity.enums.ReservationStatus;
 import com.hackathon.reservation.reservation_mvp.repository.MemberRepository;
 import com.hackathon.reservation.reservation_mvp.repository.ReservationRepository;
 import com.hackathon.reservation.reservation_mvp.repository.StoreRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -22,13 +20,11 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ReservationService {
+public class StoreService {
 
     private final StoreRepository storeRepository;
     private final MemberRepository memberRepository;
     private final ReservationRepository reservationRepository;
-
-    private final ReservationNotificationService notificationService;
 
     public List<Store> getAllStores() {
         return storeRepository.findAll();
@@ -38,7 +34,7 @@ public class ReservationService {
         return storeRepository.findAll().stream()
                 .filter(store -> store.getReservations().stream()
                         .anyMatch(reservation -> reservation.getMember().getMemberId().equals(userId)))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public int checkReservationAvailability(Long userId, StoreReservationRequestDto dto) {
@@ -63,7 +59,7 @@ public class ReservationService {
     private boolean isWithinDistance(double lat1, double lng1, double lat2, double lng2, String type) {
         double distance = Math.sqrt(Math.pow(lat1 - lat2, 2) + Math.pow(lng1 - lng2, 2)); // 간단한 유클리드 거리 계산
         if ("NEAR".equalsIgnoreCase(type)) {
-            return distance < 0.0063; // 유클리드 거리 700m 기준
+            return distance < 0.0063;//유클리드 거리 700m 기준
         } else {
             return distance < 0.015;
         }
@@ -71,7 +67,8 @@ public class ReservationService {
 
     private boolean isWithinOperatingTime(Store store, LocalTime reservationTime) {
         if (store.getSchedules().isEmpty()) return false;
-        for (StoreSchedule schedule : store.getSchedules()) {
+
+        for (StoreSchedule schedule : store.getSchedules()) { //운영시간 내 예약시간 포함되는지 확인
             if (!reservationTime.isBefore(schedule.getOpenTime()) &&
                     !reservationTime.isAfter(schedule.getCloseTime())) {
                 return true;
@@ -125,34 +122,11 @@ public class ReservationService {
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();
+
             reservationRepository.save(reservation);
         }
-        return availableStores.size();
+
+        return availableStores.size();  // 예약 요청 넣은 매장 수 반환
     }
 
-    public StoreDetailResponseDto getStoreBasicInfo(Long userId, Long storeId) {
-        Store store = storeRepository.findWithSchedulesById(storeId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 매장을 찾을 수 없습니다."));
-        LocalTime openTime = store.getSchedules().isEmpty() ? LocalTime.of(10, 0) : store.getSchedules().get(0).getOpenTime();
-        LocalTime closeTime = store.getSchedules().isEmpty() ? LocalTime.of(22, 0) : store.getSchedules().get(0).getCloseTime();
-        return StoreDetailResponseDto.from(store, openTime, closeTime);
-    }
-
-    @Transactional
-    public void updateReservationStatus(Long reservationId, String newStatus) {
-        Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Reservation not found"));
-
-        reservation.setStatus(Enum.valueOf(ReservationStatus.class, newStatus));
-        reservationRepository.save(reservation);
-
-        ReservationEvent event = new ReservationEvent(
-                reservation.getReservationId(),
-                reservation.getStore().getStoreId(),
-                newStatus,
-                LocalDateTime.now()
-        );
-        Long userId = reservation.getMember().getMemberId();
-        notificationService.notifyReservationUpdate(userId, event);
-    }
 }
