@@ -13,3 +13,4 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     Page<Reservation> findByStore_StoreId(Long storeId, Pageable pageable);
     Optional<Reservation> findByReservationIdAndStore_StoreId(Long reservationId, Long storeId);
 }
+

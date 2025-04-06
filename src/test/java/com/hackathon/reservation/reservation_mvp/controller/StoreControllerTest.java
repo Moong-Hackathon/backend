@@ -35,7 +35,7 @@ public class StoreControllerTest {
     private MockMvc mockMvc;
 
     @InjectMocks
-    private StoreController storeController;
+    private UserReservationController storeController;
 
     @Mock
     private StoreService storeService;

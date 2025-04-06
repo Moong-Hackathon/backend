@@ -16,7 +16,7 @@ import static com.hackathon.reservation.reservation_mvp.entity.enums.Reservation
 @RestController
 @RequestMapping("/v1/stores/{storeId}/reservations")
 @RequiredArgsConstructor
-public class ReservationRestController {
+public class StoreOwnerReservationController {
     private final ReservationQueryService reservationQueryService;
     private final ReservationCommandService reservationCommandService;
 
