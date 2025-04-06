@@ -29,21 +29,21 @@ public class StoreOwnerReservationController {
 
     @PatchMapping("/{reservationId}:accept")
     @Operation(summary = "가게의 예약 가능 전환 API", description = "점주가 고객의 예약 요청을 수락하여 예약 상태를 AVAILABLE로 변경합니다.")
-    public ApiResponse<ReservationResponseDto.StoreReservationStateDto> patchReservationAccept(@PathVariable("storeId") Long storeId, @PathVariable("reservationId") Long reservationId) {
+    public ApiResponse<ReservationResponseDto.ReservationStateDto> patchReservationAccept(@PathVariable("storeId") Long storeId, @PathVariable("reservationId") Long reservationId) {
         Reservation reservation = reservationCommandService.patchReservationStatus(storeId, reservationId, AVAILABLE);
-        return ApiResponse.onSuccess(ReservationConverter.storeReservationStateDto(reservation));
+        return ApiResponse.onSuccess(ReservationConverter.reservationStateDto(reservation));
     }
 
     @PatchMapping("/{reservationId}:deny")
     @Operation(summary = "가게의 예약 가능 전환 API", description = "점주가 고객의 예약 요청을 거절하여 예약 상태를 DENIED로 변경합니다.")
-    public ApiResponse<ReservationResponseDto.StoreReservationStateDto> patchReservationDeny(@PathVariable("storeId") Long storeId, @PathVariable("reservationId") Long reservationId) {
+    public ApiResponse<ReservationResponseDto.ReservationStateDto> patchReservationDeny(@PathVariable("storeId") Long storeId, @PathVariable("reservationId") Long reservationId) {
         Reservation reservation = reservationCommandService.patchReservationStatus(storeId, reservationId, DENIED);
-        return ApiResponse.onSuccess(ReservationConverter.storeReservationStateDto(reservation));
+        return ApiResponse.onSuccess(ReservationConverter.reservationStateDto(reservation));
     }
 
     @PatchMapping("/{reservationId}:calcel")
     @Operation(summary = "가게의 예약 취소 전환 API", description = "점주가 고객의 예약 요청을 거절하여 예약 상태를 CANCELED로 변경합니다.")
-    public ApiResponse<ReservationResponseDto.ReservationStateCancelDto> patchReservationCancel(@PathVariable("storeId") Long storeId, @PathVariable("reservationId") Long reservationId) {
+    public ApiResponse<ReservationResponseDto.ReservationStateCancelDto> patchReservationCancelByStore(@PathVariable("storeId") Long storeId, @PathVariable("reservationId") Long reservationId) {
         Reservation reservation = reservationCommandService.patchReservationStatus(storeId, reservationId, CANCELED);
         return ApiResponse.onSuccess(ReservationConverter.reservationStateCancelDto(reservation,"STORE"));
     }

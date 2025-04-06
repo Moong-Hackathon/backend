@@ -36,8 +36,8 @@ public class ReservationConverter {
                 .build();
     }
 
-    public static ReservationResponseDto.StoreReservationStateDto storeReservationStateDto(Reservation reservation) {
-        return ReservationResponseDto.StoreReservationStateDto.builder()
+    public static ReservationResponseDto.ReservationStateDto reservationStateDto(Reservation reservation) {
+        return ReservationResponseDto.ReservationStateDto.builder()
                 .reservationId(reservation.getReservationId())
                 .status(reservation.getStatus())
                 .respondedAt(reservation.getCreatedAt())
