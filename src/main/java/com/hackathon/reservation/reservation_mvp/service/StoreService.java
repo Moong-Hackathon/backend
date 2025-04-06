@@ -14,9 +14,6 @@ public class StoreService {
     private final StoreRepository storeRepository;
 
     public List<Store> getStoresWithUserReservations(Long userId) {
-        return storeRepository.findAll().stream()
-                .filter(store -> store.getReservations().stream()
-                        .anyMatch(reservation -> reservation.getMember().getMemberId().equals(userId)))
-                .toList();
+        return storeRepository.findAllByMemberId(userId);
     }
 }
