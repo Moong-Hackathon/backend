@@ -40,6 +40,8 @@ public class Reservation {
     private LocalDateTime updatedAt;
 
     // ====== 비즈니스 메서드 ======
+    public void available() {this.status = ReservationStatus.AVAILABLE;}
+
     public void confirm() {
         this.status = ReservationStatus.CONFIRMED;
     }
@@ -50,7 +52,7 @@ public class Reservation {
 
     public void cancel(String by) {
         this.status = ReservationStatus.CANCELED;
-        this.canceledBy = by;
+        this.canceledBy = by; //STORE 또는 USER
     }
 
     public void setStatus(ReservationStatus status) {

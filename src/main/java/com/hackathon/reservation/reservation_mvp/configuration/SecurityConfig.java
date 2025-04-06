@@ -26,6 +26,7 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 적용
                 .csrf(csrf -> csrf.disable()) // CSRF 비활성화
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin())) //H2 연결
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/**").authenticated() // "/admin/**" 경로는 인증 필요
                         .anyRequest().permitAll() // 나머지 요청은 인증 없이 허용

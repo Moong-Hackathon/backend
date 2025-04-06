@@ -20,7 +20,12 @@ public enum ErrorStatus implements BaseErrorCode {
     STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE4001", "존재하지 않는 가게입니다."),
 
     // 예약 관련 에러
-    RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION4001", "존재하지 않는 예약입니다.");
+    RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION4001", "존재하지 않는 예약입니다."),
+    RESERVATION_STORE_MISMATCH(HttpStatus.BAD_REQUEST, "RESERVATION4002", "예약의 가게 정보가 요청한 가게와 일치하지 않습니다."),
+    RESERVATION_IS_NOT_PENDING(HttpStatus.BAD_REQUEST,"RESERVATION4003", "예약 상태가 PENDING 일때만 수락/거절할 수 있습니다"),
+    RESERVATION_CANNOT_CANCEL(HttpStatus.BAD_REQUEST, "RESERVATION4004", "예약 상태가 PENDING, AVAILABLE, CONFIRMED 일때만 취소할 수 있습니다"),
+    INVALID_RESERVATION_STATUS(HttpStatus.BAD_REQUEST, "RESERVATION4005", "존재하지 않는 예약 상태입니다");
+
 
     private final HttpStatus httpStatus;
     private final String code;
