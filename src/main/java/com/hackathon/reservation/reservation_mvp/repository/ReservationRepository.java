@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+    // 예약 관련 커스텀 쿼리 추가
     Page<Reservation> findByStore_StoreId(Long storeId, Pageable pageable);
     Optional<Reservation> findByReservationIdAndStore_StoreId(Long reservationId, Long storeId);
 }
-
