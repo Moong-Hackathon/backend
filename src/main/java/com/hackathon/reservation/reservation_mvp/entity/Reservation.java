@@ -52,4 +52,8 @@ public class Reservation {
         this.status = ReservationStatus.CANCELED;
         this.canceledBy = by;
     }
+
+    public void setStatus(ReservationStatus status) {
+        this.status = status;
+    }
 }
