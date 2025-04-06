@@ -28,5 +28,4 @@ public class Store {
 
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL)
     private List<Reservation> reservations = new ArrayList<>();
-
 }
