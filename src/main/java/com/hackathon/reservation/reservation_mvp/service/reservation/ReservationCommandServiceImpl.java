@@ -39,4 +39,29 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
 
         return reservation;
     }
+
+    @Override
+    public Reservation patchReservationStatusByMember(Long memberId, Long reservationId, Enum<ReservationStatus> status){
+        Reservation reservation = reservationRepository.findByReservationIdAndMember_MemberId(reservationId, memberId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.RESERVATION_STORE_MISMATCH));
+
+        switch ((ReservationStatus) status) {
+            case CONFIRMED -> {
+                if (reservation.getStatus() != AVAILABLE)
+                    throw new GeneralException(ErrorStatus.RESERVATION_IS_NOT_AVAILABLE);
+                reservation.confirm();
+            }
+
+            case CANCELED -> {
+                if (reservation.getStatus() == DENIED || reservation.getStatus() == CANCELED)
+                    throw new GeneralException(ErrorStatus.RESERVATION_CANNOT_CANCEL);
+                reservation.cancel("MEMBER");
+            }
+            default -> throw new GeneralException(ErrorStatus.INVALID_RESERVATION_STATUS);
+        }
+
+        return reservation;
+
+
+    }
 }
