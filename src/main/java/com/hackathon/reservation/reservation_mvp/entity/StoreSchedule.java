@@ -1,5 +1,6 @@
 package com.hackathon.reservation.reservation_mvp.entity;
 
+import com.hackathon.reservation.reservation_mvp.entity.enums.DayOfWeek;
 import jakarta.persistence.*;
 import lombok.*;
 import jakarta.persistence.Id;
@@ -16,7 +17,8 @@ public class StoreSchedule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String dayOfWeek;  // 혹은 enum으로 대체 가능
+    @Enumerated(EnumType.STRING)
+    private DayOfWeek dayOfWeek;
 
     private LocalTime openTime;
     private LocalTime closeTime;
