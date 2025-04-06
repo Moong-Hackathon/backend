@@ -36,4 +36,21 @@ public class ReservationConverter {
                 .build();
     }
 
+    public static ReservationResponseDto.StoreReservationStateDto storeReservationStateDto(Reservation reservation) {
+        return ReservationResponseDto.StoreReservationStateDto.builder()
+                .reservationId(reservation.getReservationId())
+                .status(reservation.getStatus())
+                .respondedAt(reservation.getCreatedAt())
+                .build();
+    }
+
+    public static ReservationResponseDto.ReservationStateCancelDto reservationStateCancelDto(Reservation reservation, String by){
+        return ReservationResponseDto.ReservationStateCancelDto.builder()
+                .reservationId(reservation.getReservationId())
+                .status(reservation.getStatus())
+                .canceledBy(by)
+                .canceledAt(reservation.getCreatedAt())
+                .build();
+    }
+
 }
