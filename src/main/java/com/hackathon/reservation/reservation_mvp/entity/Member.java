@@ -12,12 +12,12 @@ import java.util.List;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class User {
+public class Member {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private Long userId;
+        private Long memberId;
 
-        @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+        @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
         private List<Reservation> reservations = new ArrayList<>();
 
 }
