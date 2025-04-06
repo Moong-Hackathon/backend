@@ -53,28 +53,28 @@ jobs:
 
           # Stop any running application, clean old files and create target directory
           ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
-            set -eux
-            echo "Stopping existing application if running..."
-            pkill -f 'java -jar' || true
-            echo "Cleaning up old files..."
-            rm -rf ~/backend/build/libs/*
-            echo "Creating target directory if not exists..."
-            mkdir -p ~/backend/build/libs/
-EOF
+          set -eux
+          echo "Stopping existing application if running..."
+          pkill -f 'java -jar' || true
+          echo "Cleaning up old files..."
+          rm -rf ~/backend/build/libs/*
+          echo "Creating target directory if not exists..."
+          mkdir -p ~/backend/build/libs/
+          EOF
 
           # Copy the built JAR file to the server
           scp "$JAR_FILE" $SSH_USER@$SSH_HOST:~/backend/build/libs/
 
           # Start the application on the server with prod profile
           ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
-            set -eux
-            echo "Deploying application..."
-            pkill -f 'java -jar' || true
-            cd ~/backend/build/libs
-            ls -al
-            nohup java -jar -Dspring.profiles.active=prod *.jar > app.log 2>&1 &
-            echo "Application started."
-EOF
+          set -eux
+          echo "Deploying application..."
+          pkill -f 'java -jar' || true
+          cd ~/backend/build/libs
+          ls -al
+          nohup java -jar -Dspring.profiles.active=prod *.jar > app.log 2>&1 &
+          echo "Application started."
+          EOF
 
       - name: Clean up
         if: success()
