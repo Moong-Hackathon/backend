@@ -1,21 +1,24 @@
-server:
-  port: 8080
-
 spring:
+  profiles:
+    active: dev
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
   datasource:
     url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
     username: sa
     password:
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
 
-logging:
-  level:
-    org.springframework: INFO
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:mysql://YOUR-MYSQL-ENDPOINT:3306/your_db
+    username: your_user
+    password: your_password
