@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/v1/stores/")
 @RequiredArgsConstructor
-public class ReservationController {
+public class ReservationRestController {
     private final ReservationQueryService reservationQueryService;
 
     @GetMapping("/{storeId}/reservations")
