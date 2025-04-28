@@ -54,6 +54,5 @@ public class StoreOwnerReservationController {
         Page<Reservation> reservationList = reservationQueryService.getReservationCalendar(storeId, page);
         return ApiResponse.onSuccess(ReservationConverter.reservationListDto(reservationList));
     }
-
 }
 
