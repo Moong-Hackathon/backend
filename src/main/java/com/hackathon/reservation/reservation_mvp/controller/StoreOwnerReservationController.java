@@ -41,7 +41,7 @@ public class StoreOwnerReservationController {
         return ApiResponse.onSuccess(ReservationConverter.reservationStateDto(reservation));
     }
 
-    @PatchMapping("/{reservationId}:calcel")
+    @PatchMapping("/{reservationId}:cancel")
     @Operation(summary = "가게의 예약 취소 전환 API", description = "점주가 고객의 예약 요청을 거절하여 예약 상태를 CANCELED로 변경합니다.")
     public ApiResponse<ReservationResponseDto.ReservationStateCancelDto> patchReservationCancelByStore(@PathVariable("storeId") Long storeId, @PathVariable("reservationId") Long reservationId) {
         Reservation reservation = reservationCommandService.patchReservationStatus(storeId, reservationId, CANCELED);
