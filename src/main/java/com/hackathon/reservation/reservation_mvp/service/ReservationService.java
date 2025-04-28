@@ -146,13 +146,7 @@ public class ReservationService {
         reservation.setStatus(Enum.valueOf(ReservationStatus.class, newStatus));
         reservationRepository.save(reservation);
 
-        ReservationEvent event = new ReservationEvent(
-                reservation.getReservationId(),
-                reservation.getStore().getStoreId(),
-                newStatus,
-                LocalDateTime.now()
-        );
         Long userId = reservation.getMember().getMemberId();
-        notificationService.notifyReservationUpdate(userId, event);
+        notificationService.notifyReservationUpdate(userId, reservation);
     }
 }
