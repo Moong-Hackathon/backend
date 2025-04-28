@@ -17,6 +17,8 @@ public class Member {
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long memberId;
 
+        private String name;
+
         @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
         private List<Reservation> reservations = new ArrayList<>();
 
