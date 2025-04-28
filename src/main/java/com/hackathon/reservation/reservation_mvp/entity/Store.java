@@ -23,9 +23,16 @@ public class Store {
     private Double longitude;
     private Integer capacity;
 
+    @Builder.Default
+    private Boolean isReservationOpen = true; //가게 전체의 예약 가능 여부 on/off
+
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL)
     private List<StoreSchedule> schedules = new ArrayList<>();
 
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL)
     private List<Reservation> reservations = new ArrayList<>();
+
+    public void updateReservationStatus(Boolean isReservationOpen) {
+        this.isReservationOpen = isReservationOpen;
+    }
 }

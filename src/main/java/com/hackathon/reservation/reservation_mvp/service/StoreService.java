@@ -1,5 +1,7 @@
 package com.hackathon.reservation.reservation_mvp.service;
 
+import com.hackathon.reservation.reservation_mvp.apipayload.code.status.ErrorStatus;
+import com.hackathon.reservation.reservation_mvp.apipayload.exception.GeneralException;
 import com.hackathon.reservation.reservation_mvp.dto.StoreReservationRequestDto;
 import com.hackathon.reservation.reservation_mvp.entity.Member;
 import com.hackathon.reservation.reservation_mvp.entity.Reservation;
@@ -127,6 +129,17 @@ public class StoreService {
         }
 
         return availableStores.size();  // 예약 요청 넣은 매장 수 반환
+    }
+
+    @Transactional
+    public Store patchStoreStatus (Long storeId, Boolean isReservationOpen) {
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.STORE_NOT_FOUND));
+
+        store.updateReservationStatus(isReservationOpen);
+
+        return store;
+
     }
 
 }

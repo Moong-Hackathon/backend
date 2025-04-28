@@ -47,6 +47,5 @@ public class StoreOwnerReservationController {
         Reservation reservation = reservationCommandService.patchReservationStatus(storeId, reservationId, CANCELED);
         return ApiResponse.onSuccess(ReservationConverter.reservationStateCancelDto(reservation,"STORE"));
     }
-
 }
 
