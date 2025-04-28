@@ -19,6 +19,7 @@ public class ReservationResponseDto {
     public static class ReservationDto{
         private Long reservationId;
         private Long userId;
+        private String userName;
         private LocalDateTime reservationTime;
         private Integer numberOfPeople;
         private ReservationStatus status;
