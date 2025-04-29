@@ -19,6 +19,7 @@ public class ReservationResponseDto {
     public static class ReservationDto{
         private Long reservationId;
         private Long userId;
+        private String userName;
         private LocalDateTime reservationTime;
         private Integer numberOfPeople;
         private ReservationStatus status;
@@ -39,12 +40,12 @@ public class ReservationResponseDto {
         private Boolean isLast;
     }
 
-    //(사장님)가게의 예약 상태 전환(가능, 불가시 사용)
+    //가게의 예약 상태 전환(가능, 불가, 확정시 사용)
     @Getter
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class StoreReservationStateDto{
+    public static class ReservationStateDto{
         private Long reservationId;
         private ReservationStatus status;
         private LocalDateTime respondedAt;
