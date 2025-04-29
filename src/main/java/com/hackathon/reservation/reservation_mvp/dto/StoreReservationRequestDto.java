@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 public class StoreReservationRequestDto {
     private Long userId;
     private Location location;
-    private String distanceType; // "NEAR" 또는 "FAR"
+    private String distanceType; // "NEAR" 또는 "FAR" 또는 "MID"
     private Integer numberOfPeople;
     private LocalDateTime reservationTime;
 

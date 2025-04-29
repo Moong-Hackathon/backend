@@ -23,14 +23,24 @@ public class Store {
     private Double longitude;
     private Integer capacity;
 
-    @Builder.Default
-    private Boolean isReservationOpen = true; //가게 전체의 예약 가능 여부 on/off
+    private String address;  // 주소 추가
+    private String mainImage; // 메인 이미지 파일명
+    @ElementCollection
+    @CollectionTable(
+            name = "store_menu_images", // 테이블 이름 명시
+            joinColumns = @JoinColumn(name = "store_id") // 매핑할 FK 명시
+    )
+    @Column(name = "menu_image") // 실제 저장될 값 (컬럼명 지정)
+    private List<String> menuImages;
 
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL)
     private List<StoreSchedule> schedules = new ArrayList<>();
 
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL)
     private List<Reservation> reservations = new ArrayList<>();
+
+    @Builder.Default
+    private Boolean isReservationOpen = true;
 
     public void updateReservationStatus(Boolean isReservationOpen) {
         this.isReservationOpen = isReservationOpen;

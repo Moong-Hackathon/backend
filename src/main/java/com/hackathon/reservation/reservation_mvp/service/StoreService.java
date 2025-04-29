@@ -132,14 +132,12 @@ public class StoreService {
     }
 
     @Transactional
-    public Store patchStoreStatus (Long storeId, Boolean isReservationOpen) {
+    public Store patchStoreStatus(Long storeId, Boolean isReservationOpen) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.STORE_NOT_FOUND));
 
         store.updateReservationStatus(isReservationOpen);
-
         return store;
-
     }
 
 }
