@@ -3,6 +3,7 @@ package com.hackathon.reservation.reservation_mvp.service;
 import com.hackathon.reservation.reservation_mvp.dto.ReservationEvent;
 import com.hackathon.reservation.reservation_mvp.dto.StoreDetailResponseDto;
 import com.hackathon.reservation.reservation_mvp.dto.StoreReservationRequestDto;
+import com.hackathon.reservation.reservation_mvp.dto.StoreReservationResponseDto;
 import com.hackathon.reservation.reservation_mvp.entity.Member;
 import com.hackathon.reservation.reservation_mvp.entity.Reservation;
 import com.hackathon.reservation.reservation_mvp.entity.Store;
@@ -58,6 +59,17 @@ public class ReservationService {
                 .collect(Collectors.toList());
 
         return availableStores.size();
+    }
+
+    private double calculateDistance(double lat1, double lng1, double lat2, double lng2) {
+        double earthRadius = 6371.0; // km
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLng = Math.toRadians(lng2 - lng1);
+        double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLng/2) * Math.sin(dLng/2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return earthRadius * c; // 결과는 km 단위
     }
 
     private boolean isWithinDistance(double lat1, double lng1, double lat2, double lng2, String type) {
@@ -146,13 +158,75 @@ public class ReservationService {
         reservation.setStatus(Enum.valueOf(ReservationStatus.class, newStatus));
         reservationRepository.save(reservation);
 
-        ReservationEvent event = new ReservationEvent(
-                reservation.getReservationId(),
-                reservation.getStore().getStoreId(),
-                newStatus,
-                LocalDateTime.now()
-        );
         Long userId = reservation.getMember().getMemberId();
-        notificationService.notifyReservationUpdate(userId, event);
+        notificationService.notifyReservationUpdate(userId, reservation);  // Reservation 객체 그대로 보냄
+    }
+
+    @Transactional
+    public StoreReservationResponseDto reserveAndGetAvailableStores(Long userId, StoreReservationRequestDto requestDto) {
+        double userLat = requestDto.getLocation().getLatitude();
+        double userLng = requestDto.getLocation().getLongitude();
+        String distanceType = requestDto.getDistanceType();
+        int numberOfPeople = requestDto.getNumberOfPeople();
+        LocalDateTime reservationTime = requestDto.getReservationTime();
+
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        List<Store> allStores = storeRepository.findAll();
+
+        List<StoreReservationResponseDto.StoreInfo> storeInfoList = allStores.stream()
+                .filter(store -> isWithinDistance(userLat, userLng, store.getLatitude(), store.getLongitude(), distanceType))
+                .filter(store -> store.getCapacity() >= numberOfPeople)
+                .filter(store -> isWithinOperatingTime(store, reservationTime.toLocalTime()))
+                .filter(store -> isReservationSlotAvailable(store, reservationTime, numberOfPeople))
+                .map(store -> {
+                    Reservation reservation = Reservation.builder()
+                            .member(member)
+                            .store(store)
+                            .reservationTime(reservationTime)
+                            .numberOfPeople(numberOfPeople)
+                            .status(ReservationStatus.PENDING)
+                            .createdAt(LocalDateTime.now())
+                            .updatedAt(LocalDateTime.now())
+                            .build();
+                    reservationRepository.save(reservation);
+
+                    double distance = calculateDistance(userLat, userLng, store.getLatitude(), store.getLongitude());
+
+                    LocalTime openTime = store.getSchedules().isEmpty()
+                            ? LocalTime.of(10, 0)
+                            : store.getSchedules().get(0).getOpenTime();
+                    LocalTime closeTime = store.getSchedules().isEmpty()
+                            ? LocalTime.of(22, 0)
+                            : store.getSchedules().get(0).getCloseTime();
+
+                    return StoreReservationResponseDto.StoreInfo.builder()
+                            .storeId(store.getStoreId())
+                            .storeName(store.getStoreName())
+                            .latitude(store.getLatitude())
+                            .longitude(store.getLongitude())
+                            .capacity(store.getCapacity())
+                            .address(store.getAddress())
+                            .openTime(openTime.atDate(reservationTime.toLocalDate()))
+                            .closeTime(closeTime.atDate(reservationTime.toLocalDate()))
+                            .distance(String.format("%.1fkm", distance))
+                            .mainImage(store.getMainImage())
+                            .menuImages(store.getMenuImages())
+                            .reservation(StoreReservationResponseDto.ReservationInfo.builder()
+                                    .reservationId(reservation.getReservationId())
+                                    .reservationTime(reservation.getReservationTime())
+                                    .numberOfPeople(reservation.getNumberOfPeople())
+                                    .status(reservation.getStatus().name())
+                                    .canceledBy(reservation.getCanceledBy())
+                                    .build())
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return StoreReservationResponseDto.builder()
+                .requestedStoreCount(storeInfoList.size())
+                .stores(storeInfoList)
+                .build();
     }
 }

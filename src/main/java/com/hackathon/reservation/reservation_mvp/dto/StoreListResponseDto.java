@@ -2,11 +2,13 @@ package com.hackathon.reservation.reservation_mvp.dto;
 
 import com.hackathon.reservation.reservation_mvp.entity.Reservation;
 import com.hackathon.reservation.reservation_mvp.entity.Store;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import java.time.LocalTime;
 
-@Data
+@Getter
+@AllArgsConstructor
 public class StoreListResponseDto {
 
     private Long storeId;
@@ -14,9 +16,10 @@ public class StoreListResponseDto {
     private Double latitude;
     private Double longitude;
     private Integer capacity;
-    private String openTime;
-    private String closeTime;
-    private ReservationDto reservation;
+    private LocalTime openTime;
+    private LocalTime closeTime;
+    private Long reservationId;
+    private String reservationStatus;
 
     public StoreListResponseDto(Store store, Reservation reservation, LocalTime openTime, LocalTime closeTime) {
         this.storeId = store.getStoreId();
@@ -24,25 +27,9 @@ public class StoreListResponseDto {
         this.latitude = store.getLatitude();
         this.longitude = store.getLongitude();
         this.capacity = store.getCapacity();
-        this.openTime = openTime.toString();
-        this.closeTime = closeTime.toString();
-        this.reservation = new ReservationDto(reservation);
-    }
-
-    @Data
-    public static class ReservationDto {
-        private Long reservationId;
-        private String reservationTime;
-        private Integer numberOfPeople;
-        private String status;
-        private String canceledBy;
-
-        public ReservationDto(Reservation reservation) {
-            this.reservationId = reservation.getReservationId();
-            this.reservationTime = reservation.getReservationTime().toString();
-            this.numberOfPeople = reservation.getNumberOfPeople();
-            this.status = reservation.getStatus().toString();
-            this.canceledBy = reservation.getCanceledBy();
-        }
+        this.openTime = openTime;
+        this.closeTime = closeTime;
+        this.reservationId = reservation.getReservationId();
+        this.reservationStatus = reservation.getStatus().name();
     }
 }

@@ -9,6 +9,7 @@ import java.util.List;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -16,6 +17,8 @@ public class Member {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long memberId;
+
+        private String name;
 
         @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
         private List<Reservation> reservations = new ArrayList<>();

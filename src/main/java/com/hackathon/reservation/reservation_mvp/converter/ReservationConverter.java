@@ -14,6 +14,7 @@ public class ReservationConverter {
         return ReservationResponseDto.ReservationDto.builder()
                 .reservationId(reservation.getReservationId())
                 .userId(reservation.getMember().getMemberId())
+                .userName(reservation.getMember().getName())
                 .reservationTime(reservation.getReservationTime())
                 .numberOfPeople(reservation.getNumberOfPeople())
                 .status(reservation.getStatus())
@@ -52,5 +53,6 @@ public class ReservationConverter {
                 .canceledAt(reservation.getCreatedAt())
                 .build();
     }
+
 
 }
