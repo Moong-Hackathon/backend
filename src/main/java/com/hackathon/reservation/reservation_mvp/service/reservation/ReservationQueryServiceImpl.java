@@ -3,6 +3,7 @@ package com.hackathon.reservation.reservation_mvp.service.reservation;
 import com.hackathon.reservation.reservation_mvp.apipayload.code.status.ErrorStatus;
 import com.hackathon.reservation.reservation_mvp.apipayload.exception.GeneralException;
 import com.hackathon.reservation.reservation_mvp.entity.Reservation;
+import com.hackathon.reservation.reservation_mvp.entity.enums.ReservationStatus;
 import com.hackathon.reservation.reservation_mvp.repository.ReservationRepository;
 import com.hackathon.reservation.reservation_mvp.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,5 +26,14 @@ public class ReservationQueryServiceImpl implements ReservationQueryService {
         }
 
         return reservationRepository.findByStore_StoreId(storeId, PageRequest.of(page, 10));
+    }
+
+    @Override
+    public Page<Reservation> getReservationCalendar (Long storeId, Integer page){
+        if (!storeRepository.existsById(storeId)) {
+            throw new GeneralException(ErrorStatus.STORE_NOT_FOUND);
+        }
+        // CONFIRMED 상태만 조회
+        return reservationRepository.findByStore_StoreIdAndStatus(storeId, ReservationStatus.CONFIRMED, PageRequest.of(page, 10));
     }
 }

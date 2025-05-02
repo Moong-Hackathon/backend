@@ -39,4 +39,10 @@ public class Store {
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL)
     private List<Reservation> reservations = new ArrayList<>();
 
+    @Builder.Default
+    private Boolean isReservationOpen = true;
+
+    public void updateReservationStatus(Boolean isReservationOpen) {
+        this.isReservationOpen = isReservationOpen;
+    }
 }

@@ -35,7 +35,7 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 
-    private String canceledBy;  // "USER" 또는 "STORE"
+    private String canceledBy;  // "MEMBER" 또는 "STORE"
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -53,7 +53,7 @@ public class Reservation {
 
     public void cancel(String by) {
         this.status = ReservationStatus.CANCELED;
-        this.canceledBy = by; //STORE 또는 USER
+        this.canceledBy = by; //STORE 또는 MEMBER
     }
 
     public void setStatus(ReservationStatus status) {
