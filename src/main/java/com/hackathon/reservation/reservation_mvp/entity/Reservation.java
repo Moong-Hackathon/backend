@@ -35,7 +35,7 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 
-    private String canceledBy;  // "MEMBER" 또는 "STORE"
+    private String canceledBy;  // "USER" 또는 "STORE"
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
