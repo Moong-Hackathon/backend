@@ -1,5 +1,6 @@
 package com.hackathon.reservation.reservation_mvp.service;
 
+import com.hackathon.reservation.reservation_mvp.dto.ReservationResponseDto;
 import com.hackathon.reservation.reservation_mvp.dto.StoreDetailResponseDto;
 import com.hackathon.reservation.reservation_mvp.dto.StoreReservationRequestDto;
 import com.hackathon.reservation.reservation_mvp.dto.StoreReservationResponseDto;
@@ -117,6 +118,15 @@ public class ReservationService {
             LocalTime openTime = store.getSchedules().isEmpty() ? LocalTime.of(10, 0) : store.getSchedules().get(0).getOpenTime();
             LocalTime closeTime = store.getSchedules().isEmpty() ? LocalTime.of(22, 0) : store.getSchedules().get(0).getCloseTime();
 
+            ReservationResponseDto.ReservationDto reservationDto = ReservationResponseDto.ReservationDto.builder()
+                    .reservationId(reservation.getReservationId())
+                    .userId(member.getMemberId())
+                    .reservationTime(reservation.getReservationTime())
+                    .numberOfPeople(reservation.getNumberOfPeople())
+                    .status(reservation.getStatus())
+                    .createdAt(reservation.getCreatedAt())
+                    .build();
+
             StoreReservationResponseDto.StoreInfo storeInfo = StoreReservationResponseDto.StoreInfo.builder()
                     .storeId(store.getStoreId())
                     .storeName(store.getStoreName())
@@ -129,13 +139,7 @@ public class ReservationService {
                     .distance(String.format("%.1fkm", distance))
                     .mainImage(store.getMainImage())
                     .menuImages(store.getMenuImages())
-                    .reservation(StoreReservationResponseDto.ReservationInfo.builder()
-                            .reservationId(reservation.getReservationId())
-                            .reservationTime(reservation.getReservationTime())
-                            .numberOfPeople(reservation.getNumberOfPeople())
-                            .status(reservation.getStatus().name())
-                            .canceledBy(reservation.getCanceledBy())
-                            .build())
+                    .reservation(reservationDto)
                     .build();
 
             storeInfoList.add(storeInfo);
