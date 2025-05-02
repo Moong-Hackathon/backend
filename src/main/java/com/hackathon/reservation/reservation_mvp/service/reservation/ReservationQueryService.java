@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 
 public interface ReservationQueryService {
     Page<Reservation> getReservations (Long storeId, Integer page);
+    Page<Reservation> getReservationCalendar (Long storeId, Integer page);
 
 
 }
