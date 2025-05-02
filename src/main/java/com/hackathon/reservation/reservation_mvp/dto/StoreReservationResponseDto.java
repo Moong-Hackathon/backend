@@ -32,18 +32,6 @@ public class StoreReservationResponseDto {
         private String distance;
         private String mainImage;
         private List<String> menuImages;
-        private ReservationInfo reservation;
-    }
-
-    @Data
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class ReservationInfo {
-        private Long reservationId;
-        private LocalDateTime reservationTime;
-        private int numberOfPeople;
-        private String status;      // AVAILABLE, DENIED 등
-        private String canceledBy;  // null 가능
+        private ReservationResponseDto.ReservationDto reservation;
     }
 }

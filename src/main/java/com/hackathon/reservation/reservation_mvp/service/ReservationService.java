@@ -1,5 +1,6 @@
 package com.hackathon.reservation.reservation_mvp.service;
 
+import com.hackathon.reservation.reservation_mvp.dto.ReservationResponseDto;
 import com.hackathon.reservation.reservation_mvp.dto.ReservationEvent;
 import com.hackathon.reservation.reservation_mvp.dto.StoreDetailResponseDto;
 import com.hackathon.reservation.reservation_mvp.dto.StoreReservationRequestDto;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -127,6 +129,8 @@ public class ReservationService {
                 .filter(store -> isReservationSlotAvailable(store, reservationTime, numberOfPeople))
                 .collect(Collectors.toList());
 
+        List<StoreReservationResponseDto.StoreInfo> storeInfoList = new ArrayList<>();
+
         for (Store store : availableStores) {
             Reservation reservation = Reservation.builder()
                     .member(member)
@@ -138,6 +142,38 @@ public class ReservationService {
                     .updatedAt(LocalDateTime.now())
                     .build();
             reservationRepository.save(reservation);
+
+            double distance = calculateDistance(userLat, userLng, store.getLatitude(), store.getLongitude());
+
+            LocalTime openTime = store.getSchedules().isEmpty() ? LocalTime.of(10, 0) : store.getSchedules().get(0).getOpenTime();
+            LocalTime closeTime = store.getSchedules().isEmpty() ? LocalTime.of(22, 0) : store.getSchedules().get(0).getCloseTime();
+
+            ReservationResponseDto.ReservationDto reservationDto = ReservationResponseDto.ReservationDto.builder()
+                    .reservationId(reservation.getReservationId())
+                    .userId(member.getMemberId())
+                    .reservationTime(reservation.getReservationTime())
+                    .numberOfPeople(reservation.getNumberOfPeople())
+                    .status(reservation.getStatus())
+                    .createdAt(reservation.getCreatedAt())
+                    .build();
+
+            StoreReservationResponseDto.StoreInfo storeInfo = StoreReservationResponseDto.StoreInfo.builder()
+                    .storeId(store.getStoreId())
+                    .storeName(store.getStoreName())
+                    .latitude(store.getLatitude())
+                    .longitude(store.getLongitude())
+                    .capacity(store.getCapacity())
+                    .address(store.getAddress())
+                    .openTime(openTime.atDate(reservationTime.toLocalDate()))
+                    .closeTime(closeTime.atDate(reservationTime.toLocalDate()))
+                    .distance(String.format("%.1fkm", distance))
+                    .mainImage(store.getMainImage())
+                    .menuImages(store.getMenuImages())
+                    .reservation(reservationDto)
+                    .build();
+
+            storeInfoList.add(storeInfo);
+
         }
         return availableStores.size();
     }
@@ -201,6 +237,15 @@ public class ReservationService {
                             ? LocalTime.of(22, 0)
                             : store.getSchedules().get(0).getCloseTime();
 
+                    ReservationResponseDto.ReservationDto reservationDto = ReservationResponseDto.ReservationDto.builder()
+                            .reservationId(reservation.getReservationId())
+                            .userId(member.getMemberId())
+                            .reservationTime(reservation.getReservationTime())
+                            .numberOfPeople(reservation.getNumberOfPeople())
+                            .status(reservation.getStatus())
+                            .createdAt(reservation.getCreatedAt())
+                            .build();
+
                     return StoreReservationResponseDto.StoreInfo.builder()
                             .storeId(store.getStoreId())
                             .storeName(store.getStoreName())
@@ -213,13 +258,7 @@ public class ReservationService {
                             .distance(String.format("%.1fkm", distance))
                             .mainImage(store.getMainImage())
                             .menuImages(store.getMenuImages())
-                            .reservation(StoreReservationResponseDto.ReservationInfo.builder()
-                                    .reservationId(reservation.getReservationId())
-                                    .reservationTime(reservation.getReservationTime())
-                                    .numberOfPeople(reservation.getNumberOfPeople())
-                                    .status(reservation.getStatus().name())
-                                    .canceledBy(reservation.getCanceledBy())
-                                    .build())
+                            .reservation(reservationDto)
                             .build();
                 })
                 .collect(Collectors.toList());
