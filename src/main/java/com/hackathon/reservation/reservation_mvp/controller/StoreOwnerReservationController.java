@@ -8,80 +8,73 @@ import com.hackathon.reservation.reservation_mvp.service.reservation.Reservation
 import com.hackathon.reservation.reservation_mvp.service.reservation.ReservationQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import static com.hackathon.reservation.reservation_mvp.entity.enums.ReservationStatus.*;
 
 /**
- * Handles store-owner operations on reservations: list, accept, deny, cancel, history.
+ * 매장 점주용 예약 관리 API
  */
 @RestController
 @RequestMapping("/v1/stores/{storeId}/reservations")
 @RequiredArgsConstructor
 public class StoreOwnerReservationController {
 
-    private final ReservationQueryService reservationQueryService;
-    private final ReservationCommandService reservationCommandService;
+    @Qualifier("reservationQueryServiceImpl")
+    private final ReservationQueryService queryService;
+
+    @Qualifier("reservationCommandServiceImpl")
+    private final ReservationCommandService commandService;
 
     @GetMapping
-    @Operation(summary = "매장 점주 예약 목록 조회 API",
-            description = "매장에 접수된 예약 목록과 상태를 조회합니다.")
+    @Operation(summary = "매장 점주 예약 목록 조회")
     public ApiResponse<ReservationResponseDto.ReservationListDto> getReservations(
             @PathVariable Long storeId,
             @RequestParam(name = "page", defaultValue = "0") Integer page) {
 
-        Page<Reservation> pageResult = reservationQueryService.getReservations(storeId, page);
-        // <-- now calls toListDto(...)
-        return ApiResponse.ofSuccess(ReservationConverter.toListDto(pageResult));
+        Page<Reservation> p = queryService.getReservations(storeId, page);
+        return ApiResponse.ofSuccess(ReservationConverter.toListDto(p));
     }
 
     @PatchMapping("/{reservationId}:accept")
-    @Operation(summary = "가게 예약 허용 API",
-            description = "예약 상태를 AVAILABLE로 변경합니다.")
-    public ApiResponse<ReservationResponseDto.ReservationStateDto> patchReservationAccept(
+    @Operation(summary = "가게 예약 허용")
+    public ApiResponse<ReservationResponseDto.ReservationStateDto> patchAccept(
             @PathVariable Long storeId,
             @PathVariable Long reservationId) {
 
-        Reservation saved = reservationCommandService
-                .patchReservationStatus(storeId, reservationId, AVAILABLE);
-        // <-- now calls toStateDto(...)
-        return ApiResponse.ofSuccess(ReservationConverter.toStateDto(saved));
+        Reservation r = commandService.updateReservationStatus(reservationId, AVAILABLE);
+        return ApiResponse.ofSuccess(ReservationConverter.toStateDto(r));
     }
 
     @PatchMapping("/{reservationId}:deny")
-    @Operation(summary = "가게 예약 거절 API",
-            description = "예약 상태를 DENIED로 변경합니다.")
-    public ApiResponse<ReservationResponseDto.ReservationStateDto> patchReservationDeny(
+    @Operation(summary = "가게 예약 거절")
+    public ApiResponse<ReservationResponseDto.ReservationStateDto> patchDeny(
             @PathVariable Long storeId,
             @PathVariable Long reservationId) {
 
-        Reservation saved = reservationCommandService
-                .patchReservationStatus(storeId, reservationId, DENIED);
-        return ApiResponse.ofSuccess(ReservationConverter.toStateDto(saved));
+        Reservation r = commandService.updateReservationStatus(reservationId, DENIED);
+        return ApiResponse.ofSuccess(ReservationConverter.toStateDto(r));
     }
 
     @PatchMapping("/{reservationId}:cancel")
-    @Operation(summary = "가게 예약 취소 API",
-            description = "예약 상태를 CANCELED로 변경합니다.")
-    public ApiResponse<ReservationResponseDto.ReservationStateCancelDto> patchReservationCancelByStore(
+    @Operation(summary = "가게 예약 취소")
+    public ApiResponse<ReservationResponseDto.ReservationStateCancelDto> patchCancel(
             @PathVariable Long storeId,
             @PathVariable Long reservationId) {
 
-        Reservation saved = reservationCommandService
-                .patchReservationStatus(storeId, reservationId, CANCELED);
-        // <-- now calls toCancelDto(...)
-        return ApiResponse.ofSuccess(ReservationConverter.toCancelDto(saved, "STORE"));
+        Reservation r = commandService.updateReservationStatus(reservationId, CANCELED);
+        return ApiResponse.ofSuccess(ReservationConverter.toCancelDto(r, "STORE"));
     }
 
     @GetMapping("/history")
-    @Operation(summary = "매장 예약 내역 조회 API",
-            description = "현재까지의 CONFIRMED 예약 내역을 조회합니다.")
-    public ApiResponse<ReservationResponseDto.ReservationListDto> getReservationHistory(
+    @Operation(summary = "매장 예약 내역 조회")
+    public ApiResponse<ReservationResponseDto.ReservationListDto> getHistory(
             @PathVariable Long storeId,
             @RequestParam(name = "page", defaultValue = "0") Integer page) {
 
-        Page<Reservation> pageResult = reservationQueryService.getReservationCalendar(storeId, page);
-        return ApiResponse.ofSuccess(ReservationConverter.toListDto(pageResult));
+        Page<Reservation> p = queryService.getReservationCalendar(storeId, page);
+        return ApiResponse.ofSuccess(ReservationConverter.toListDto(p));
     }
 }

@@ -1,4 +1,4 @@
-package com.hackathon.reservation.reservation_mvp.service.reservation;
+package com.hackathon.reservation.reservation_mvp.service.reservation.impl;
 
 import com.hackathon.reservation.reservation_mvp.apipayload.code.status.ErrorStatus;
 import com.hackathon.reservation.reservation_mvp.apipayload.exception.GeneralException;
@@ -11,19 +11,20 @@ import com.hackathon.reservation.reservation_mvp.repository.MemberRepository;
 import com.hackathon.reservation.reservation_mvp.repository.ReservationRepository;
 import com.hackathon.reservation.reservation_mvp.repository.StoreRepository;
 import com.hackathon.reservation.reservation_mvp.service.ReservationNotificationService;
+import com.hackathon.reservation.reservation_mvp.service.reservation.ReservationCommandService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * {@link ReservationCommandService} 구현체.
+ * Command‐side 구현체. {@link ReservationCommandService} 에 선언된
+ * 명령(예약 생성/상태 변경)만 책임집니다.
  */
-@Service
+@Service("reservationCommandServiceImpl")
 @RequiredArgsConstructor
 @Transactional
 public class ReservationCommandServiceImpl implements ReservationCommandService {
@@ -41,11 +42,11 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         List<Store> candidates = storeRepository.findAll().stream()
                 .filter(s -> withinDistance(dto, s))
                 .filter(s -> s.getCapacity() >= dto.getNumberOfPeople())
-                .filter(s -> withinOperatingHours(s, dto.getReservationTime().toLocalTime()))
+                .filter(s -> withinHours(s, dto.getReservationTime().toLocalTime()))
                 .filter(s -> slotAvailable(s, dto.getReservationTime(), dto.getNumberOfPeople()))
                 .collect(Collectors.toList());
 
-        for (Store store : candidates) {
+        candidates.forEach(store -> {
             Reservation r = Reservation.builder()
                     .member(member)
                     .store(store)
@@ -56,7 +57,8 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
                     .updatedAt(LocalDateTime.now())
                     .build();
             reservationRepository.save(r);
-        }
+        });
+
         return candidates.size();
     }
 
@@ -66,23 +68,39 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
                 .orElseThrow(() -> new GeneralException(ErrorStatus.RESERVATION_NOT_FOUND));
 
         switch (newStatus) {
-            case AVAILABLE  -> r.markAvailable();
-            case CONFIRMED  -> r.markConfirmed();
-            case DENIED     -> r.markDenied();
-            case CANCELED   -> r.cancel("SYSTEM");
-            default         -> throw new GeneralException(ErrorStatus.INVALID_RESERVATION_STATUS);
+            case AVAILABLE:
+                if (r.getStatus() != ReservationStatus.PENDING)
+                    throw new GeneralException(ErrorStatus.RESERVATION_IS_NOT_PENDING);
+                r.markAvailable();
+                break;
+            case DENIED:
+                if (r.getStatus() != ReservationStatus.PENDING)
+                    throw new GeneralException(ErrorStatus.RESERVATION_IS_NOT_PENDING);
+                r.markDenied();
+                break;
+            case CONFIRMED:
+                if (r.getStatus() != ReservationStatus.AVAILABLE)
+                    throw new GeneralException(ErrorStatus.RESERVATION_IS_NOT_AVAILABLE);
+                r.markConfirmed();
+                break;
+            case CANCELED:
+                if (r.getStatus() == ReservationStatus.CANCELED)
+                    throw new GeneralException(ErrorStatus.RESERVATION_CANNOT_CANCEL);
+                r.cancel("SYSTEM");
+                break;
+            default:
+                throw new GeneralException(ErrorStatus.INVALID_RESERVATION_STATUS);
         }
+
         r.setUpdatedAt(LocalDateTime.now());
         reservationRepository.save(r);
 
-        // Notification은 오직 여기서만
-        notificationService.notifyReservationUpdate(
-                r.getMember().getMemberId(), r);
-
+        // Notification 은 오직 이 위치에서만
+        notificationService.notifyReservationUpdate(r.getMember().getMemberId(), r);
         return r;
     }
 
-    /* --- private helper methods --- */
+    // === private helpers ===
 
     private boolean withinDistance(StoreReservationRequestDto dto, Store s) {
         double dLat = dto.getLocation().getLatitude()  - s.getLatitude();
@@ -93,17 +111,17 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
                 : dist < 0.015;
     }
 
-    private boolean withinOperatingHours(Store s, LocalTime t) {
+    private boolean withinHours(Store s, java.time.LocalTime t) {
         return s.getSchedules().stream()
                 .anyMatch(sc -> !t.isBefore(sc.getOpenTime()) && !t.isAfter(sc.getCloseTime()));
     }
 
-    private boolean slotAvailable(Store s, LocalDateTime time, int people) {
-        LocalDateTime from = time.minusHours(1);
-        LocalDateTime to   = time.plusHours(1);
+    private boolean slotAvailable(Store s, java.time.LocalDateTime time, int people) {
+        java.time.LocalDateTime from = time.minusHours(1);
+        java.time.LocalDateTime to   = time.plusHours(1);
         int already = s.getReservations().stream()
-                .filter(r -> !r.getReservationTime().isBefore(from)
-                        && !r.getReservationTime().isAfter(to))
+                .filter(x -> !x.getReservationTime().isBefore(from)
+                        && !x.getReservationTime().isAfter(to))
                 .mapToInt(Reservation::getNumberOfPeople)
                 .sum();
         return already + people <= s.getCapacity();

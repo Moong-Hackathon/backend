@@ -1,31 +1,25 @@
 package com.hackathon.reservation.reservation_mvp.service.reservation;
 
 import com.hackathon.reservation.reservation_mvp.dto.StoreDetailResponseDto;
+import com.hackathon.reservation.reservation_mvp.entity.Reservation;
 import com.hackathon.reservation.reservation_mvp.entity.Store;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 /**
- * 조회 전용 서비스 (Query).
- * 사용자·점주용 읽기 작업만 담당합니다.
+ * Read‐only operations for reservations and related store info.
  */
 public interface ReservationQueryService {
+    /** 점주용: 해당 매장의 모든(이번달) 예약 조회 */
+    Page<Reservation> getReservations(Long storeId, int page);
 
-    /**
-     * 사용자가 예약한 매장 목록을 반환합니다.
-     *
-     * @param userId 사용자 ID
-     * @return 매장 목록
-     */
+    /** 점주용: 해당 매장의 CONFIRMED(역사) 예약 조회 */
+    Page<Reservation> getReservationCalendar(Long storeId, int page);
+
+    /** 사용자용: 해당 사용자가 예약한 모든 매장 조회 */
     List<Store> getStoresWithUserReservations(Long userId);
 
-    /**
-     * 특정 매장의 기본 정보를 조회합니다.
-     *
-     * @param userId  사용자 ID (미래 확장용)
-     * @param storeId 매장 ID
-     * @return 매장 상세 DTO
-     */
+    /** 사용자용: 특정 매장 기본 정보 조회 */
     StoreDetailResponseDto getStoreBasicInfo(Long userId, Long storeId);
-
 }
