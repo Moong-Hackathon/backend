@@ -5,15 +5,21 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * Response DTOs for store-owner APIs.
+ */
 public class StoreResponseDto {
+
+    /**
+     * DTO returned when store-owner toggles reservation availability.
+     */
     @Getter
     @Builder
-    @AllArgsConstructor
     @NoArgsConstructor
-    public static class StoreStateDto{
+    @AllArgsConstructor
+    public static class StoreStateDto {
         private Long storeId;
         private Boolean isReservationOpen;
         private String message;
-
     }
 }

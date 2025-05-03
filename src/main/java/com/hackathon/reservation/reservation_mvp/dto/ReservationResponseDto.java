@@ -9,14 +9,19 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * DTOs for reservation-related API responses.
+ */
 public class ReservationResponseDto {
 
-    //(사장님) 예약 목록 조회시 사용
+    /**
+     * Single reservation info for store-owner views.
+     */
     @Getter
     @Builder
-    @AllArgsConstructor
     @NoArgsConstructor
-    public static class ReservationDto{
+    @AllArgsConstructor
+    public static class ReservationDto {
         private Long reservationId;
         private Long userId;
         private String userName;
@@ -24,14 +29,16 @@ public class ReservationResponseDto {
         private Integer numberOfPeople;
         private ReservationStatus status;
         private LocalDateTime createdAt;
-
     }
 
+    /**
+     * Paged list of reservations with metadata.
+     */
     @Getter
     @Builder
-    @AllArgsConstructor
     @NoArgsConstructor
-    public static class ReservationListDto{
+    @AllArgsConstructor
+    public static class ReservationListDto {
         private List<ReservationDto> reservationList;
         private Integer listSize;
         private Integer totalPage;
@@ -40,27 +47,30 @@ public class ReservationResponseDto {
         private Boolean isLast;
     }
 
-    //가게의 예약 상태 전환(가능, 불가, 확정시 사용)
+    /**
+     * Response when a reservation state is changed (accept/deny).
+     */
     @Getter
     @Builder
-    @AllArgsConstructor
     @NoArgsConstructor
-    public static class ReservationStateDto{
+    @AllArgsConstructor
+    public static class ReservationStateDto {
         private Long reservationId;
         private ReservationStatus status;
         private LocalDateTime respondedAt;
     }
 
-    //(사장님, 손님 공통)가게의 예약 상태 취소로 전환
+    /**
+     * Response when a reservation is canceled.
+     */
     @Getter
     @Builder
-    @AllArgsConstructor
     @NoArgsConstructor
-    public static class ReservationStateCancelDto{
+    @AllArgsConstructor
+    public static class ReservationStateCancelDto {
         private Long reservationId;
         private ReservationStatus status;
         private String canceledBy;
         private LocalDateTime canceledAt;
     }
-
 }

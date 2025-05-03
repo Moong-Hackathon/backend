@@ -1,62 +1,89 @@
 package com.hackathon.reservation.reservation_mvp.entity;
 
-
 import com.hackathon.reservation.reservation_mvp.entity.enums.ReservationStatus;
 import jakarta.persistence.*;
-import jakarta.persistence.Id;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Represents a booking request by a {@link Member} at a {@link Store}.
+ */
 @Entity
+@Table(name = "reservation")
 @Getter
-@Setter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@Builder
 public class Reservation {
 
+    /** Primary key. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long reservationId;
 
-    @ManyToOne
-    @JoinColumn(name = "member_id")
+    /** The member who made this reservation. */
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @ManyToOne
-    @JoinColumn(name = "store_id")
+    /** The store being reserved. */
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
+    /** The desired date and time. */
     private LocalDateTime reservationTime;
 
+    /** Number of people included in the party. */
     private Integer numberOfPeople;
 
+    /** Current status in the reservation workflow. */
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 
-    private String canceledBy;  // "USER" 또는 "STORE"
+    /** Who cancelled (“STORE” or “MEMBER”), if applicable. */
+    private String canceledBy;
 
+    /** When this record was created. */
     private LocalDateTime createdAt;
+
+    /** When this record was last updated. */
     private LocalDateTime updatedAt;
 
-    // ====== 비즈니스 메서드 ======
-    public void available() {this.status = ReservationStatus.AVAILABLE;}
+    //===== Business methods for transitioning status =====
 
-    public void confirm() {
+    /** Marks this reservation as AVAILABLE. */
+    public void markAvailable() {
+        this.status = ReservationStatus.AVAILABLE;
+    }
+
+    /** Marks this reservation as CONFIRMED. */
+    public void markConfirmed() {
         this.status = ReservationStatus.CONFIRMED;
     }
 
-    public void deny() {
+    /** Marks this reservation as DENIED. */
+    public void markDenied() {
         this.status = ReservationStatus.DENIED;
     }
 
+    /**
+     * Cancels this reservation.
+     *
+     * @param by “STORE” or “MEMBER”
+     */
     public void cancel(String by) {
         this.status = ReservationStatus.CANCELED;
-        this.canceledBy = by; //STORE 또는 MEMBER
+        this.canceledBy = by;
     }
 
-    public void setStatus(ReservationStatus status) {
-        this.status = status;
+    /**
+     * Updates the last‐updated timestamp.
+     *
+     * @param updatedAt new updated timestamp
+     */
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

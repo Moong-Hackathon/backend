@@ -12,28 +12,34 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Fetches pages of {@link Reservation} for owner and history views.
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReservationQueryServiceImpl implements ReservationQueryService {
+
+    private static final int PAGE_SIZE = 10;
+
     private final ReservationRepository reservationRepository;
     private final StoreRepository storeRepository;
 
     @Override
-    public Page<Reservation> getReservations (Long storeId, Integer page){
+    public Page<Reservation> getReservations(Long storeId, Integer page) {
         if (!storeRepository.existsById(storeId)) {
             throw new GeneralException(ErrorStatus.STORE_NOT_FOUND);
         }
-
-        return reservationRepository.findByStore_StoreId(storeId, PageRequest.of(page, 10));
+        return reservationRepository.findByStore_StoreId(
+                storeId, PageRequest.of(page, PAGE_SIZE));
     }
 
     @Override
-    public Page<Reservation> getReservationCalendar (Long storeId, Integer page){
+    public Page<Reservation> getReservationCalendar(Long storeId, Integer page) {
         if (!storeRepository.existsById(storeId)) {
             throw new GeneralException(ErrorStatus.STORE_NOT_FOUND);
         }
-        // CONFIRMED 상태만 조회
-        return reservationRepository.findByStore_StoreIdAndStatus(storeId, ReservationStatus.CONFIRMED, PageRequest.of(page, 10));
+        return reservationRepository.findByStore_StoreIdAndStatus(
+                storeId, ReservationStatus.CONFIRMED, PageRequest.of(page, PAGE_SIZE));
     }
 }

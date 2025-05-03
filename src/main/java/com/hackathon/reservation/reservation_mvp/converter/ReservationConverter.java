@@ -8,9 +8,25 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Utility for converting {@link Reservation} entities into various
+ * {@link ReservationResponseDto} types.
+ */
 @Component
-public class ReservationConverter {
-    public static ReservationResponseDto.ReservationDto reservationDto(Reservation reservation) {
+public final class ReservationConverter {
+
+    private ReservationConverter() {
+        // Prevent instantiation
+    }
+
+    /**
+     * Converts a single {@link Reservation} to its DTO form.
+     *
+     * @param reservation the reservation entity
+     * @return the reservation DTO
+     */
+    public static ReservationResponseDto.ReservationDto toDto(
+            final Reservation reservation) {
         return ReservationResponseDto.ReservationDto.builder()
                 .reservationId(reservation.getReservationId())
                 .userId(reservation.getMember().getMemberId())
@@ -22,22 +38,37 @@ public class ReservationConverter {
                 .build();
     }
 
-    public static ReservationResponseDto.ReservationListDto reservationListDto(Page<Reservation> reservationPage) {
-        List<ReservationResponseDto.ReservationDto> dtoList = reservationPage.stream()
-                .map(ReservationConverter::reservationDto)
+    /**
+     * Converts a paginated list of {@link Reservation} entities into a
+     * {@link ReservationResponseDto.ReservationListDto}.
+     *
+     * @param page the page of reservations
+     * @return the list DTO with pagination metadata
+     */
+    public static ReservationResponseDto.ReservationListDto toListDto(
+            final Page<Reservation> page) {
+        List<ReservationResponseDto.ReservationDto> list = page.stream()
+                .map(ReservationConverter::toDto)
                 .collect(Collectors.toList());
 
         return ReservationResponseDto.ReservationListDto.builder()
-                .reservationList(dtoList)
-                .listSize(dtoList.size())
-                .totalPage(reservationPage.getTotalPages())
-                .totalElements(reservationPage.getTotalElements())
-                .isFirst(reservationPage.isFirst())
-                .isLast(reservationPage.isLast())
+                .reservationList(list)
+                .listSize(list.size())
+                .totalPage(page.getTotalPages())
+                .totalElements(page.getTotalElements())
+                .isFirst(page.isFirst())
+                .isLast(page.isLast())
                 .build();
     }
 
-    public static ReservationResponseDto.ReservationStateDto reservationStateDto(Reservation reservation) {
+    /**
+     * Builds a DTO for state-change responses (accept/deny) of a reservation.
+     *
+     * @param reservation the reservation entity
+     * @return the state DTO
+     */
+    public static ReservationResponseDto.ReservationStateDto toStateDto(
+            final Reservation reservation) {
         return ReservationResponseDto.ReservationStateDto.builder()
                 .reservationId(reservation.getReservationId())
                 .status(reservation.getStatus())
@@ -45,14 +76,20 @@ public class ReservationConverter {
                 .build();
     }
 
-    public static ReservationResponseDto.ReservationStateCancelDto reservationStateCancelDto(Reservation reservation, String by){
+    /**
+     * Builds a DTO for cancellation responses of a reservation.
+     *
+     * @param reservation the reservation entity
+     * @param canceledBy  who cancelled ("STORE" or "MEMBER")
+     * @return the cancellation state DTO
+     */
+    public static ReservationResponseDto.ReservationStateCancelDto toCancelDto(
+            final Reservation reservation, final String canceledBy) {
         return ReservationResponseDto.ReservationStateCancelDto.builder()
                 .reservationId(reservation.getReservationId())
                 .status(reservation.getStatus())
-                .canceledBy(by)
+                .canceledBy(canceledBy)
                 .canceledAt(reservation.getCreatedAt())
                 .build();
     }
-
-
 }

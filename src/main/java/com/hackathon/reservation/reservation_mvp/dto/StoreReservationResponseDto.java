@@ -2,24 +2,30 @@ package com.hackathon.reservation.reservation_mvp.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
+/**
+ * Response payload when user requests reservations across multiple stores.
+ */
+@Getter
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class StoreReservationResponseDto {
     private int requestedStoreCount;
-    private List<StoreInfo> stores; // available store 목록
+    private List<StoreInfo> stores;
 
-    @Data
+    /**
+     * Info about each store where reservation was placed.
+     */
+    @Getter
     @Builder
-    @AllArgsConstructor
     @NoArgsConstructor
+    @AllArgsConstructor
     public static class StoreInfo {
         private Long storeId;
         private String storeName;
