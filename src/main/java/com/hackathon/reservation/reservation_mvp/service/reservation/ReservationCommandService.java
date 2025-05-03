@@ -1,32 +1,16 @@
 package com.hackathon.reservation.reservation_mvp.service.reservation;
 
+import com.hackathon.reservation.reservation_mvp.dto.StoreReservationRequestDto;
 import com.hackathon.reservation.reservation_mvp.entity.Reservation;
 import com.hackathon.reservation.reservation_mvp.entity.enums.ReservationStatus;
 
 /**
- * Defines commands to change the status of a {@link Reservation}.
+ * Command‐side operations for reservations.
  */
 public interface ReservationCommandService {
+    /** 사용자 예약 요청 (여러 매장에 동시에 PENDING 예약 생성) */
+    int reserveAllAvailableStores(Long userId, StoreReservationRequestDto dto);
 
-    /**
-     * Patches the status of a reservation for a given store.
-     *
-     * @param storeId       the identifier of the store that owns the reservation
-     * @param reservationId the identifier of the reservation to update
-     * @param status        the new {@link ReservationStatus} to apply
-     * @return the updated {@link Reservation}
-     */
-    Reservation patchReservationStatus(
-            Long storeId, Long reservationId, ReservationStatus status);
-
-    /**
-     * Patches the status of a reservation for a given member.
-     *
-     * @param memberId      the identifier of the member who owns the reservation
-     * @param reservationId the identifier of the reservation to update
-     * @param status        the new {@link ReservationStatus} to apply
-     * @return the updated {@link Reservation}
-     */
-    Reservation patchReservationStatusByMember(
-            Long memberId, Long reservationId, ReservationStatus status);
+    /** 단일 예약 상태 전이 (ACCEPT, DENY, CONFIRM, CANCEL) */
+    Reservation updateReservationStatus(Long reservationId, ReservationStatus newStatus);
 }

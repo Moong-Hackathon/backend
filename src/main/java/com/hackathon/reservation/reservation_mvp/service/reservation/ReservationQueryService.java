@@ -1,28 +1,25 @@
 package com.hackathon.reservation.reservation_mvp.service.reservation;
 
+import com.hackathon.reservation.reservation_mvp.dto.StoreDetailResponseDto;
 import com.hackathon.reservation.reservation_mvp.entity.Reservation;
+import com.hackathon.reservation.reservation_mvp.entity.Store;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
+
 /**
- * Defines queries to fetch {@link Reservation} pages for a store.
+ * Read‐only operations for reservations and related store info.
  */
 public interface ReservationQueryService {
+    /** 점주용: 해당 매장의 모든(이번달) 예약 조회 */
+    Page<Reservation> getReservations(Long storeId, int page);
 
-    /**
-     * Retrieves a page of all reservations for a store.
-     *
-     * @param storeId the store identifier
-     * @param page    zero-based page index
-     * @return a {@link Page} of reservations
-     */
-    Page<Reservation> getReservations(Long storeId, Integer page);
+    /** 점주용: 해당 매장의 CONFIRMED(역사) 예약 조회 */
+    Page<Reservation> getReservationCalendar(Long storeId, int page);
 
-    /**
-     * Retrieves a page of confirmed reservations (history) for a store.
-     *
-     * @param storeId the store identifier
-     * @param page    zero-based page index
-     * @return a {@link Page} of confirmed reservations
-     */
-    Page<Reservation> getReservationCalendar(Long storeId, Integer page);
+    /** 사용자용: 해당 사용자가 예약한 모든 매장 조회 */
+    List<Store> getStoresWithUserReservations(Long userId);
+
+    /** 사용자용: 특정 매장 기본 정보 조회 */
+    StoreDetailResponseDto getStoreBasicInfo(Long userId, Long storeId);
 }
