@@ -1,7 +1,6 @@
 package com.hackathon.reservation.reservation_mvp.service;
 
 import com.hackathon.reservation.reservation_mvp.dto.ReservationResponseDto;
-import com.hackathon.reservation.reservation_mvp.dto.ReservationEvent;
 import com.hackathon.reservation.reservation_mvp.dto.StoreDetailResponseDto;
 import com.hackathon.reservation.reservation_mvp.dto.StoreReservationRequestDto;
 import com.hackathon.reservation.reservation_mvp.dto.StoreReservationResponseDto;
