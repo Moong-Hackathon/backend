@@ -2,86 +2,110 @@ package com.hackathon.reservation.reservation_mvp.service.reservation;
 
 import com.hackathon.reservation.reservation_mvp.apipayload.code.status.ErrorStatus;
 import com.hackathon.reservation.reservation_mvp.apipayload.exception.GeneralException;
+import com.hackathon.reservation.reservation_mvp.dto.StoreReservationRequestDto;
+import com.hackathon.reservation.reservation_mvp.entity.Member;
 import com.hackathon.reservation.reservation_mvp.entity.Reservation;
+import com.hackathon.reservation.reservation_mvp.entity.Store;
 import com.hackathon.reservation.reservation_mvp.entity.enums.ReservationStatus;
+import com.hackathon.reservation.reservation_mvp.repository.MemberRepository;
 import com.hackathon.reservation.reservation_mvp.repository.ReservationRepository;
+import com.hackathon.reservation.reservation_mvp.repository.StoreRepository;
 import com.hackathon.reservation.reservation_mvp.service.ReservationNotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
- * Implementation of {@link ReservationCommandService} that updates reservation states.
+ * {@link ReservationCommandService} 구현체.
  */
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class ReservationCommandServiceImpl implements ReservationCommandService {
 
+    private final StoreRepository storeRepository;
+    private final MemberRepository memberRepository;
     private final ReservationRepository reservationRepository;
     private final ReservationNotificationService notificationService;
 
     @Override
-    public Reservation patchReservationStatus(
-            Long storeId, Long reservationId, ReservationStatus status) {
+    public int reserveAllAvailableStores(Long userId, StoreReservationRequestDto dto) {
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.RESERVATION_MEMBER_MISMATCH));
 
-        Reservation reservation = reservationRepository
-                .findByReservationIdAndStore_StoreId(reservationId, storeId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.RESERVATION_STORE_MISMATCH));
+        List<Store> candidates = storeRepository.findAll().stream()
+                .filter(s -> withinDistance(dto, s))
+                .filter(s -> s.getCapacity() >= dto.getNumberOfPeople())
+                .filter(s -> withinOperatingHours(s, dto.getReservationTime().toLocalTime()))
+                .filter(s -> slotAvailable(s, dto.getReservationTime(), dto.getNumberOfPeople()))
+                .collect(Collectors.toList());
 
-        switch (status) {
-            case AVAILABLE, DENIED -> {
-                if (reservation.getStatus() != ReservationStatus.PENDING) {
-                    throw new GeneralException(ErrorStatus.RESERVATION_IS_NOT_PENDING);
-                }
-                if (status == ReservationStatus.AVAILABLE) {
-                    reservation.markAvailable();
-                } else {
-                    reservation.markDenied();
-                }
-            }
-            case CANCELED -> {
-                if (reservation.getStatus() == ReservationStatus.DENIED
-                        || reservation.getStatus() == ReservationStatus.CANCELED) {
-                    throw new GeneralException(ErrorStatus.RESERVATION_CANNOT_CANCEL);
-                }
-                reservation.cancel("STORE");
-            }
-            default -> throw new GeneralException(ErrorStatus.INVALID_RESERVATION_STATUS);
+        for (Store store : candidates) {
+            Reservation r = Reservation.builder()
+                    .member(member)
+                    .store(store)
+                    .reservationTime(dto.getReservationTime())
+                    .numberOfPeople(dto.getNumberOfPeople())
+                    .status(ReservationStatus.PENDING)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+            reservationRepository.save(r);
         }
-
-        // Notify user of status change
-        notificationService.notifyReservationUpdate(
-                reservation.getMember().getMemberId(), reservation);
-
-        return reservation;
+        return candidates.size();
     }
 
     @Override
-    public Reservation patchReservationStatusByMember(
-            Long memberId, Long reservationId, ReservationStatus status) {
+    public Reservation updateReservationStatus(Long reservationId, ReservationStatus newStatus) {
+        Reservation r = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.RESERVATION_NOT_FOUND));
 
-        Reservation reservation = reservationRepository
-                .findByReservationIdAndMember_MemberId(reservationId, memberId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.RESERVATION_MEMBER_MISMATCH));
-
-        switch (status) {
-            case CONFIRMED -> {
-                if (reservation.getStatus() != ReservationStatus.AVAILABLE) {
-                    throw new GeneralException(ErrorStatus.RESERVATION_IS_NOT_AVAILABLE);
-                }
-                reservation.markConfirmed();
-            }
-            case CANCELED -> {
-                if (reservation.getStatus() == ReservationStatus.DENIED
-                        || reservation.getStatus() == ReservationStatus.CANCELED) {
-                    throw new GeneralException(ErrorStatus.RESERVATION_CANNOT_CANCEL);
-                }
-                reservation.cancel("MEMBER");
-            }
-            default -> throw new GeneralException(ErrorStatus.INVALID_RESERVATION_STATUS);
+        switch (newStatus) {
+            case AVAILABLE  -> r.markAvailable();
+            case CONFIRMED  -> r.markConfirmed();
+            case DENIED     -> r.markDenied();
+            case CANCELED   -> r.cancel("SYSTEM");
+            default         -> throw new GeneralException(ErrorStatus.INVALID_RESERVATION_STATUS);
         }
+        r.setUpdatedAt(LocalDateTime.now());
+        reservationRepository.save(r);
 
-        return reservation;
+        // Notification은 오직 여기서만
+        notificationService.notifyReservationUpdate(
+                r.getMember().getMemberId(), r);
+
+        return r;
+    }
+
+    /* --- private helper methods --- */
+
+    private boolean withinDistance(StoreReservationRequestDto dto, Store s) {
+        double dLat = dto.getLocation().getLatitude()  - s.getLatitude();
+        double dLng = dto.getLocation().getLongitude() - s.getLongitude();
+        double dist = Math.hypot(dLat, dLng);
+        return "NEAR".equalsIgnoreCase(dto.getDistanceType())
+                ? dist < 0.0063
+                : dist < 0.015;
+    }
+
+    private boolean withinOperatingHours(Store s, LocalTime t) {
+        return s.getSchedules().stream()
+                .anyMatch(sc -> !t.isBefore(sc.getOpenTime()) && !t.isAfter(sc.getCloseTime()));
+    }
+
+    private boolean slotAvailable(Store s, LocalDateTime time, int people) {
+        LocalDateTime from = time.minusHours(1);
+        LocalDateTime to   = time.plusHours(1);
+        int already = s.getReservations().stream()
+                .filter(r -> !r.getReservationTime().isBefore(from)
+                        && !r.getReservationTime().isAfter(to))
+                .mapToInt(Reservation::getNumberOfPeople)
+                .sum();
+        return already + people <= s.getCapacity();
     }
 }
