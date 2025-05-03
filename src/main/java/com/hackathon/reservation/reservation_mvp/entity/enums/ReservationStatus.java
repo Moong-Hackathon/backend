@@ -1,9 +1,17 @@
 package com.hackathon.reservation.reservation_mvp.entity.enums;
 
+/**
+ * The life-cycle states of a reservation.
+ */
 public enum ReservationStatus {
-    PENDING, //처음에 사용자가 보냈을 때
-    AVAILABLE, //가게가 ok 했을 때
-    CONFIRMED, //사용자가 최종 ok 했을때
-    DENIED, //가게가 안된다고 거절(처음에)
-    CANCELED //사용자/가게가 취소했을때
+    /** Initial state when user requests. */
+    PENDING,
+    /** Store owner approved the request. */
+    AVAILABLE,
+    /** User confirmed after store approval. */
+    CONFIRMED,
+    /** Store owner explicitly denied the request. */
+    DENIED,
+    /** Either party cancelled the reservation. */
+    CANCELED
 }

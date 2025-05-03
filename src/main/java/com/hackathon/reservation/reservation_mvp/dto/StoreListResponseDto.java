@@ -7,10 +7,12 @@ import lombok.Getter;
 
 import java.time.LocalTime;
 
+/**
+ * DTO for showing a list of stores with a user's reservation.
+ */
 @Getter
 @AllArgsConstructor
 public class StoreListResponseDto {
-
     private Long storeId;
     private String storeName;
     private Double latitude;
@@ -21,7 +23,19 @@ public class StoreListResponseDto {
     private Long reservationId;
     private String reservationStatus;
 
-    public StoreListResponseDto(Store store, Reservation reservation, LocalTime openTime, LocalTime closeTime) {
+    /**
+     * Constructor binding entity + matching reservation + schedule.
+     *
+     * @param store the store entity
+     * @param reservation the user's reservation
+     * @param openTime the opening time
+     * @param closeTime the closing time
+     */
+    public StoreListResponseDto(
+            Store store,
+            Reservation reservation,
+            LocalTime openTime,
+            LocalTime closeTime) {
         this.storeId = store.getStoreId();
         this.storeName = store.getStoreName();
         this.latitude = store.getLatitude();

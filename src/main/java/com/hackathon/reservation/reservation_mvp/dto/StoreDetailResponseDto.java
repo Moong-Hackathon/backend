@@ -1,13 +1,15 @@
 package com.hackathon.reservation.reservation_mvp.dto;
 
 import com.hackathon.reservation.reservation_mvp.entity.Store;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalTime;
 import java.util.List;
 
+/**
+ * DTO for detailed store information in user-facing endpoints.
+ */
 @Getter
 @Builder
 public class StoreDetailResponseDto {
@@ -22,18 +24,27 @@ public class StoreDetailResponseDto {
     private String mainImage;
     private List<String> menuImage;
 
-    public static StoreDetailResponseDto from(Store store, LocalTime openTime, LocalTime closeTime) {
+    /**
+     * Creates a StoreDetailResponseDto from the given entity and schedule times.
+     *
+     * @param store the store entity
+     * @param openTime the opening time
+     * @param closeTime the closing time
+     * @return populated DTO
+     */
+    public static StoreDetailResponseDto from(
+            Store store, LocalTime openTime, LocalTime closeTime) {
         return StoreDetailResponseDto.builder()
                 .storeId(store.getStoreId())
                 .storeName(store.getStoreName())
                 .latitude(store.getLatitude())
                 .longitude(store.getLongitude())
                 .capacity(store.getCapacity())
-                .openTime(openTime.toString())   // "10:00" 이런 String 형식
+                .openTime(openTime.toString())
                 .closeTime(closeTime.toString())
-                .address(store.getAddress())     // Store에 address 필드 있다고 가정
-                .mainImage(store.getMainImage()) // Store에 mainImage 필드 있다고 가정
-                .menuImage(store.getMenuImages())// Store에 menuImages 필드(List<String>) 있다고 가정
+                .address(store.getAddress())
+                .mainImage(store.getMainImage())
+                .menuImage(store.getMenuImages())
                 .build();
     }
 }

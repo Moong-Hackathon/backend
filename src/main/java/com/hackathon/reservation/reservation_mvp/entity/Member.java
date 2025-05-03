@@ -2,25 +2,31 @@ package com.hackathon.reservation.reservation_mvp.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import jakarta.persistence.Id;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A user of the system who can make reservations.
+ */
 @Entity
+@Table(name = "member")
 @Getter
-@Setter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@Builder
 public class Member {
+
+        /** Primary key. */
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long memberId;
 
+        /** The member’s display name. */
         private String name;
 
-        @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
+        /** All reservations made by this member. */
+        @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+        @Builder.Default
         private List<Reservation> reservations = new ArrayList<>();
-
 }
