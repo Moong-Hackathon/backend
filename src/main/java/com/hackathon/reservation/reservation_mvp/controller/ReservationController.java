@@ -1,11 +1,15 @@
 package com.hackathon.reservation.reservation_mvp.controller;
 
+import com.hackathon.reservation.reservation_mvp.apipayload.ApiResponse;
+import com.hackathon.reservation.reservation_mvp.converter.ReservationConverter;
+import com.hackathon.reservation.reservation_mvp.dto.ReservationResponseDto;
 import com.hackathon.reservation.reservation_mvp.dto.StoreDetailResponseDto;
 import com.hackathon.reservation.reservation_mvp.dto.StoreListResponseDto;
-import com.hackathon.reservation.reservation_mvp.dto.StoreReservationRequestDto;
-import com.hackathon.reservation.reservation_mvp.dto.StoreReservationResponseDto;
+import com.hackathon.reservation.reservation_mvp.entity.Reservation;
 import com.hackathon.reservation.reservation_mvp.entity.Store;
 import com.hackathon.reservation.reservation_mvp.service.ReservationService;
+import com.hackathon.reservation.reservation_mvp.service.reservation.ReservationCommandService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,72 +17,55 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.hackathon.reservation.reservation_mvp.entity.enums.ReservationStatus.CANCELED;
+import static com.hackathon.reservation.reservation_mvp.entity.enums.ReservationStatus.CONFIRMED;
+
 @RestController
 @RequestMapping("/v1/users/{userId}")
 @RequiredArgsConstructor
 public class ReservationController {
 
     private final ReservationService reservationService;
+    private final ReservationCommandService reservationCommandService;
 
     /**
-     * 예약 목록 조회 API
+     * [사용자] 예약 목록 조회 API
      * GET /v1/users/{userId}/reservations
      */
     @GetMapping("/reservations")
-    public List<StoreListResponseDto> getStoresWithReservations(@PathVariable Long userId) {
-        List<Store> stores = reservationService.getStoresWithUserReservations(userId);
-        List<StoreListResponseDto> response = new ArrayList<>();
-
-        for (Store store : stores) {
+    @Operation(summary = "사용자 예약 목록 조회 API",
+            description = "사용자가 예약한 매장 목록과 그 예약 정보를 조회합니다.")
+    public ApiResponse<List<StoreListResponseDto>> getStoresWithReservations(@PathVariable Long userId) {
+        List<StoreListResponseDto> dtoList = new ArrayList<>();
+        for (Store store : reservationService.getStoresWithUserReservations(userId)) {
             store.getReservations().stream()
-                    .filter(reservation -> reservation.getMember().getMemberId().equals(userId))
+                    .filter(r -> r.getMember().getMemberId().equals(userId))
                     .findFirst()
                     .ifPresent(reservation -> {
-                        LocalTime openTime = store.getSchedules().isEmpty() ? LocalTime.of(9, 0) : store.getSchedules().get(0).getOpenTime();
-                        LocalTime closeTime = store.getSchedules().isEmpty() ? LocalTime.of(21, 0) : store.getSchedules().get(0).getCloseTime();
-                        response.add(new StoreListResponseDto(store, reservation, openTime, closeTime));
+                        LocalTime openTime  = store.getSchedules().isEmpty()
+                                ? LocalTime.of(9, 0)
+                                : store.getSchedules().get(0).getOpenTime();
+                        LocalTime closeTime = store.getSchedules().isEmpty()
+                                ? LocalTime.of(21, 0)
+                                : store.getSchedules().get(0).getCloseTime();
+                        dtoList.add(new StoreListResponseDto(store, reservation, openTime, closeTime));
                     });
         }
-        return response;
+        return ApiResponse.onSuccess(dtoList);
     }
 
     /**
-     * 매장 상세 조회 API
+     * [사용자] 매장 상세 조회 API
      * GET /v1/users/{userId}/stores/{storeId}
      */
     @GetMapping("/stores/{storeId}")
-    public StoreDetailResponseDto getStoreSimple(
+    @Operation(summary = "사용자 매장 상세 조회 API",
+            description = "특정 매장의 기본 정보를 조회합니다.")
+    public ApiResponse<StoreDetailResponseDto> getStoreDetail(
             @PathVariable Long userId,
             @PathVariable Long storeId
     ) {
-        return reservationService.getStoreBasicInfo(userId, storeId);
-    }
-
-    /**
-     * [사용자] 예약 확정 API
-     * PATCH /v1/users/{userId}/reservations/{reservationId}:confirm
-     */
-    @PatchMapping("/reservations/{reservationId}:confirm")
-    @Operation(summary = "사용자 예약 확정 API", description = "점주가 예약 가능(AVAILABLE)으로 승인한 예약을 사용자가 최종 확정(CONFIRMED)합니다.")
-    public ApiResponse<ReservationResponseDto.ReservationStateDto> patchReservationConfirmed(
-            @PathVariable("userId") Long userId,
-            @PathVariable("reservationId") Long reservationId
-    ) {
-        Reservation reservation = reservationCommandService.patchReservationStatusByMember(userId, reservationId, CONFIRMED);
-        return ApiResponse.onSuccess(ReservationConverter.reservationStateDto(reservation));
-    }
-
-    /**
-     * [사용자] 예약 취소 API
-     * PATCH /v1/users/{userId}/reservations/{reservationId}:cancel
-     */
-    @PatchMapping("/reservations/{reservationId}:cancel")
-    @Operation(summary = "사용자 예약 취소 전환 API", description = "사용자가 이미 생성한 예약을 취소할 수 있으며, 취소 주체를 MEMBER로 기록합니다.")
-    public ApiResponse<ReservationResponseDto.ReservationStateCancelDto> patchReservationCancelByMember(
-            @PathVariable("userId") Long userId,
-            @PathVariable("reservationId") Long reservationId
-    ) {
-        Reservation reservation = reservationCommandService.patchReservationStatusByMember(userId, reservationId, CANCELED);
-        return ApiResponse.onSuccess(ReservationConverter.reservationStateCancelDto(reservation, "MEMBER"));
+        StoreDetailResponseDto detail = reservationService.getStoreBasicInfo(userId, storeId);
+        return ApiResponse.onSuccess(detail);
     }
 }
